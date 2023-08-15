@@ -30,14 +30,23 @@ async def set_autorole(inter, role: disnake.Role = disnake.Option(name="role", d
     auto_role_name = role.name
     await inter.response.send_message(f"已設定新成員將自動獲得的身分組為 `{role.name}`！")
 
-@bot.slash_command(name="giverole", description="給予使用者指定的身分組")
-async def giverole(inter, user: disnake.User = disnake.Option(name="user", description="選擇一位使用者"), role: disnake.Role = disnake.Option(name="role", description="選擇一個身分組")):
+@bot.slash_command(name="giveroles", description="給予使用者多個指定的身分組")
+async def giveroles(inter, 
+                    user: disnake.User = disnake.Option(name="user", description="選擇一位使用者"),
+                    role_names: str = disnake.Option(name="role_names", description="逗號分隔的身分組名稱列表")):
+    
     member = await inter.guild.fetch_member(user.id)
-    if role:
-        await member.add_roles(role)
-        await inter.response.send_message(f"已給予 {member.display_name} 身分組：{role.name}！")
+
+    roles_to_add = [disnake.utils.get(inter.guild.roles, name=role_name.strip()) for role_name in role_names.split(',')]
+    roles_to_add = [role for role in roles_to_add if role]  # Filter out None values
+
+    if roles_to_add:
+        await member.add_roles(*roles_to_add)
+
+        role_names_str = ', '.join(role.name for role in roles_to_add)
+        await inter.response.send_message(f"已給予 {member.display_name} 身分組：{role_names_str}！")
     else:
-        await inter.response.send_message(f"找不到該身分組！")
+        await inter.response.send_message(f"請選擇至少一個身分組！")
 
 
 @bot.slash_command(name="removerole", description="移除使用者的指定身分組")
