@@ -30,23 +30,41 @@ async def set_autorole(inter, role: disnake.Role = disnake.Option(name="role", d
     auto_role_name = role.name
     await inter.response.send_message(f"已設定新成員將自動獲得的身分組為 `{role.name}`！")
 
-@bot.slash_command(name="giveroles", description="給予使用者多個指定的身分組")
+
+# @bot.slash_command(name="giveroles", description="給予使用者指定的身分組")
+# async def giveroles(inter, 
+#                     user: disnake.User = disnake.Option(name="user", description="選擇一位使用者"),
+#                     role: disnake.Role = disnake.Option(name="role", description="身分組名稱")):
+    
+#     member = await inter.guild.fetch_member(user.id)
+
+#     role_to_add = disnake.utils.get(inter.guild.roles, name=role.name)
+
+#     if role_to_add:
+#         await member.add_roles(role_to_add)
+
+#         await inter.response.send_message(f"已給予 {member.display_name} 身分組：{role_to_add.name}！")
+#     else:
+#         await inter.response.send_message(f"找不到指定的身分組！")
+
+@bot.slash_command(name="giveroles", description="給予使用者指定的身分組")
 async def giveroles(inter, 
                     user: disnake.User = disnake.Option(name="user", description="選擇一位使用者"),
-                    role_names: str = disnake.Option(name="role_names", description="逗號分隔的身分組名稱列表")):
+                    role1: disnake.Role = disnake.Option(name="role1", description="第一個身分組名稱", required=False),
+                    role2: disnake.Role = disnake.Option(name="role2", description="第二個身分組名稱", required=False),
+                    role3: disnake.Role = disnake.Option(name="role3", description="第三個身分組名稱", required=False)):
     
     member = await inter.guild.fetch_member(user.id)
 
-    roles_to_add = [disnake.utils.get(inter.guild.roles, name=role_name.strip()) for role_name in role_names.split(',')]
-    roles_to_add = [role for role in roles_to_add if role]  # Filter out None values
+    roles_to_add = [role for role in [role1, role2, role3] if role]
 
     if roles_to_add:
         await member.add_roles(*roles_to_add)
-
-        role_names_str = ', '.join(role.name for role in roles_to_add)
-        await inter.response.send_message(f"已給予 {member.display_name} 身分組：{role_names_str}！")
+        
+        role_names = ", ".join(role.name for role in roles_to_add)
+        await inter.response.send_message(f"已給予 {member.display_name} 身分組：{role_names}！")
     else:
-        await inter.response.send_message(f"請選擇至少一個身分組！")
+        await inter.response.send_message(f"請至少選擇一個身分組！")
 
 
 @bot.slash_command(name="removerole", description="移除使用者的指定身分組")
