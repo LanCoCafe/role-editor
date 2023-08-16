@@ -34,31 +34,43 @@ async def set_autorole(inter, role: disnake.Role = disnake.Option(name="role", d
 
 
 # /giveallroles
-
-@bot.slash_command(name="role_give_multiple", description="給予指定成員群組的身分組")
-async def giveroles(
+@bot.slash_command(name="role_give_everyone", description="給予所有成員指定的身分組")
+async def role_give_everyone(
     inter, 
-    target_type: str = disnake.Option(name="target_type", description="目標群組類型 (everyone/bot/member/specify)", type=OptionType.string),
-    role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱"),
-    target_role: disnake.Role = disnake.Option(name="target_role", description="當目標為 'specify' 時，要給誰的身分組", required=False)
+    role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")
 ):
+    members_to_update = inter.guild.members
+    await _give_roles_to_members(inter, members_to_update, role)
 
-    if target_type == "everyone":
-        members_to_update = inter.guild.members
-    elif target_type == "bot":
-        members_to_update = [m for m in inter.guild.members if m.bot]
-    elif target_type == "member":
-        members_to_update = [m for m in inter.guild.members if not m.bot]
-    elif target_type == "specify":
-        if not target_role:
-            await inter.response.send_message("請指定目標身分組!")
-            return
-        members_to_update = [m for m in inter.guild.members if target_role in m.roles]
-    else:
-        await inter.response.send_message("無效的目標類型!")
-        return
+@bot.slash_command(name="role_give_bot", description="給予所有機器人指定的身分組")
+async def role_give_bot(
+    inter, 
+    role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")
+):
+    members_to_update = [m for m in inter.guild.members if m.bot]
+    await _give_roles_to_members(inter, members_to_update, role)
 
-    for member in members_to_update:
+@bot.slash_command(name="role_give_member", description="給予所有非機器人成員指定的身分組")
+async def role_give_member(
+    inter, 
+    role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")
+):
+    members_to_update = [m for m in inter.guild.members if not m.bot]
+    await _give_roles_to_members(inter, members_to_update, role)
+
+@bot.slash_command(name="role_give_specify", description="給予特定身分組的成員指定的身分組")
+async def role_give_specify(
+    inter, 
+    role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱"),
+    target_role: disnake.Role = disnake.Option(name="target_role", description="要給誰的身分組")
+):
+    members_to_update = [m for m in inter.guild.members if target_role in m.roles]
+    await _give_roles_to_members(inter, members_to_update, role)
+
+
+# Helper function to give roles to a list of members
+async def _give_roles_to_members(inter, members, role):
+    for member in members:
         try:
             await member.add_roles(role)
         except disnake.Forbidden:
@@ -67,31 +79,29 @@ async def giveroles(
         except Exception as e:
             await inter.response.send_message(f"為 {member.display_name} 增加身分組時出錯: {e}")
             return
-
     await inter.response.send_message(f"已給予所選成員身分組：{role.name}！")
 
-
-# @bot.slash_command(name="giveallroles", description="給予指定成員群組的身分組")
-# async def giveallroles(
+# @bot.slash_command(name="role_give_multiple", description="給予指定成員群組的身分組")
+# async def giveroles(
 #     inter, 
-#     role: disnake.Role = disnake.Option(name="role", description="身分組名稱"),
-#     target: str = disnake.Option(name="target", description="目標群組 (all/bots/non-bots/specific_role)", type=OptionType.string),
-#     specific_role: disnake.Role = disnake.Option(name="specific_role", description="當目標為 specific_role 時，要給誰的身分組", required=False)
+#     target_type: str = disnake.Option(name="target_type", description="目標群組類型 (everyone/bot/member/specify)", type=OptionType.string),
+#     role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱"),
+#     target_role: disnake.Role = disnake.Option(name="target_role", description="當目標為 'specify' 時，要給誰的身分組", required=False)
 # ):
 
-#     if target == "all":
+#     if target_type == "everyone":
 #         members_to_update = inter.guild.members
-#     elif target == "bots":
+#     elif target_type == "bot":
 #         members_to_update = [m for m in inter.guild.members if m.bot]
-#     elif target == "non-bots":
+#     elif target_type == "member":
 #         members_to_update = [m for m in inter.guild.members if not m.bot]
-#     elif target == "specific_role":
-#         if not specific_role:
-#             await inter.response.send_message("請指定特定的身分組!")
+#     elif target_type == "specify":
+#         if not target_role:
+#             await inter.response.send_message("請指定目標身分組!")
 #             return
-#         members_to_update = [m for m in inter.guild.members if specific_role in m.roles]
+#         members_to_update = [m for m in inter.guild.members if target_role in m.roles]
 #     else:
-#         await inter.response.send_message("無效的目標選項!")
+#         await inter.response.send_message("無效的目標類型!")
 #         return
 
 #     for member in members_to_update:
@@ -105,22 +115,6 @@ async def giveroles(
 #             return
 
 #     await inter.response.send_message(f"已給予所選成員身分組：{role.name}！")
-
-
-# @bot.slash_command(name="giveallroles", description="給予所有成員指定的身分組")
-# async def giveallroles(inter, role: disnake.Role = disnake.Option(name="role", description="身分組名稱")):
-    
-#     for member in inter.guild.members:
-#         try:
-#             await member.add_roles(role)
-#         except disnake.Forbidden:
-#             await inter.response.send_message(f"沒有權限為 {member.display_name} 增加身分組!")
-#             return  # 可以選擇在這裡終止，或者只記錄錯誤並繼續
-#         except Exception as e:
-#             await inter.response.send_message(f"為 {member.display_name} 增加身分組時出錯: {e}")
-#             return
-
-#     await inter.response.send_message(f"已給予所有成員身分組：{role.name}！")
 
 
 # /giveroles
