@@ -3,6 +3,22 @@ from disnake.ext import commands
 from disnake import OptionType
 from disnake.ext.commands import has_permissions
 
+
+@commands.slash_command(name="help", description="顯示所有可用的命令和說明")
+async def _help(inter):
+    embed = disnake.Embed(title="幫助", description="這是我們的命令列表和說明：", color=0x00FF00)
+
+    # 添加命令到你的幫助指令中
+    embed.add_field(name="/role", value="關於身分組的主命令", inline=False)
+    # 如果你還有其他命令，可以像上面那樣加入更多的fields
+    # embed.add_field(name="/another_command", value="Another command's description", inline=False)
+
+    await inter.response.send_message(embed=embed)
+
+def setup(bot):
+    bot.add_slash_command(_help)
+
+
 @commands.slash_command(name="role", description="關於身分組的主命令")
 @has_permissions(administrator=True)
 async def role(inter):
