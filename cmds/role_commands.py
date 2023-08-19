@@ -1,8 +1,10 @@
 import disnake
 from disnake.ext import commands
 from disnake import OptionType
+from disnake.ext.commands import has_permissions
 
 @commands.slash_command(name="role", description="關於身分組的主命令")
+@has_permissions(administrator=True)
 async def role(inter):
     pass
 
@@ -11,13 +13,6 @@ async def role_auto(inter, role: disnake.Role = disnake.Option(name="role", desc
     with open("auto_role.txt", "w") as file:
         file.write(role.name)
     await inter.response.send_message(f"已設定新成員將自動獲得的身分組為 `{role.name}`！")
-
-
-# @role.sub_command(name="auto", description="設定新成員自動獲得的身分組")
-# async def role_auto(inter, role: disnake.Role = disnake.Option(name="role", description="新的身分組名稱", type=OptionType.role)):
-#     global auto_role_name
-#     auto_role_name = role.name
-#     await inter.response.send_message(f"已設定新成員將自動獲得的身分組為 `{role.name}`！")
 
 @role.sub_command(name="give_everyone", description="給予所有成員指定的身分組")
 async def role_give_everyone(inter, role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")):
@@ -76,6 +71,11 @@ async def _give_roles_to_members(inter, members, role):
             await inter.response.send_message(f"為 {member.display_name} 增加身分組時出錯: {e}")
             return
     await inter.response.send_message(f"已給予所選成員身分組：{role.name}！")
+
+@role.error
+async def role_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("警告: 您沒有使用此命令的權限!")
 
 def setup(bot):
     bot.add_slash_command(role)

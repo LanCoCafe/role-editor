@@ -3,7 +3,6 @@ from disnake.ext import commands
 import os
 from dotenv import load_dotenv
 
-
 intents = disnake.Intents.all()
 bot = commands.Bot(command_prefix='/', intents=intents)
 
@@ -24,7 +23,6 @@ async def on_member_join(member):
         if role:
             await member.add_roles(role)
             print(f"已經給予 {member.name} 身分組：{role.name}！")
-
 
 bot.load_extension("cmds.role_commands")  # 載入 role_commands 模組
 
