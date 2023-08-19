@@ -1,7 +1,6 @@
 import disnake
 from disnake.ext import commands
 from disnake import OptionType
-from config import auto_role_name
 
 @commands.slash_command(name="role", description="關於身分組的主命令")
 async def role(inter):
@@ -9,9 +8,16 @@ async def role(inter):
 
 @role.sub_command(name="auto", description="設定新成員自動獲得的身分組")
 async def role_auto(inter, role: disnake.Role = disnake.Option(name="role", description="新的身分組名稱", type=OptionType.role)):
-    global auto_role_name
-    auto_role_name = role.name
+    with open("auto_role.txt", "w") as file:
+        file.write(role.name)
     await inter.response.send_message(f"已設定新成員將自動獲得的身分組為 `{role.name}`！")
+
+
+# @role.sub_command(name="auto", description="設定新成員自動獲得的身分組")
+# async def role_auto(inter, role: disnake.Role = disnake.Option(name="role", description="新的身分組名稱", type=OptionType.role)):
+#     global auto_role_name
+#     auto_role_name = role.name
+#     await inter.response.send_message(f"已設定新成員將自動獲得的身分組為 `{role.name}`！")
 
 @role.sub_command(name="give_everyone", description="給予所有成員指定的身分組")
 async def role_give_everyone(inter, role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")):
