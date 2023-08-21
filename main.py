@@ -60,3 +60,5 @@ bot.load_extension("cmds.role_commands")  # 載入 role_commands 模組
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 bot.run(TOKEN)
+
+# Hello World!
