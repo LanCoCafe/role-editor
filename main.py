@@ -54,24 +54,33 @@ class HelpMenu(disnake.ui.Select):
             "/role give_specify": "給予擁有此身分組(target_role)的使用者(role)指定身分組",
             "/role give": "給予一位使用者指定身分組",
             "/role remove": "移除一位使用者指定身分組",
-            "/role create <身分組名稱>": "創建身分組",
+            "/role create": "創建身分組",
             "/role delete": "刪除身分組",
             # ... 可以根据需要加入更多命令描述
         }.get(selected_command, "找不到該命令的描述")
         
-        embed = disnake.Embed(title=f"命令：{selected_command}", description=description, color=0x00FF00)
+        embed = disnake.Embed(title=f"命令：{selected_command}", description=description, color=0x91fcff)
         await inter.response.send_message(embed=embed)
 
 class LinkButton(disnake.ui.Button):
     def __init__(self):
-        super().__init__(style=disnake.ButtonStyle.link, label="LanCo Café 官方支援伺服器", url="https://discord.gg/seZ3WNTC4J")
+        super().__init__(style=disnake.ButtonStyle.link, label="LanCo Café 官方支援伺服器", url="https://discord.gg/seZ3WNTC4J", emoji=":LanCoImage:1135956618262098022")
 
 @bot.slash_command(description="顯示所有可用的命令和說明")
 async def help(inter):
+    embed = disnake.Embed(
+        # title="Role Editor",
+        description="感謝你的邀請！我是由 LanCo Café 團隊製作的 Role Editor！\n 專門讓管理身分組變得更輕鬆的機器人！",
+        color=0x91fcff 
+    )
+    embed.set_author(name="Role Editor", icon_url="https://cdn.discordapp.com/attachments/1135881121276629033/1141345683929055312/Untitled.png")
+    embed.add_field(name="開發者", value="@langmao", inline=False)
+    embed.add_field(name="頭像製作者", value="@yubuur_0614", inline=False)
+
     view = disnake.ui.View()
     view.add_item(HelpMenu())
     view.add_item(LinkButton())  # 添加 link button 到 view 中
-    await inter.response.send_message("選擇一個命令來查詢:", view=view)
+    await inter.response.send_message(embed=embed, view=view)
 
 bot.load_extension("cmds.role_commands")  # 載入 role_commands 模組
 
