@@ -1,3 +1,4 @@
+import json
 import disnake
 from disnake.ext import commands
 from disnake import OptionType
@@ -8,6 +9,30 @@ from disnake.ext.commands import has_permissions
 @has_permissions(administrator=True)
 async def role(inter):
     pass
+
+async def set_auto_role(self, ctx, *, role: disnake.Role):
+    # 首先將角色資訊儲存到 JSON
+    with open("auto_roles.json", "r") as file:
+        data = json.load(file)
+
+    data[str(ctx.guild.id)] = role.id
+
+    with open("auto_roles.json", "w") as file:
+        json.dump(data, file, indent=4)
+
+    await ctx.send(f"New members will now automatically get the {role.name} role!")
+
+@commands.Cog.listener()
+async def on_member_join(self, member):
+    # 當新成員加入時，從 JSON 獲取身分組資訊並賦予身分組
+    with open("auto_roles.json", "r") as file:
+        data = json.load(file)
+    
+    role_id = data.get(str(member.guild.id))
+    if role_id:
+        role = disnake.utils.get(member.guild.roles, id=role_id)
+        if role:
+            await member.add_roles(role)
 
 @role.sub_command(name="auto", description="設定新成員自動獲得的身分組")
 async def role_auto(inter, role: disnake.Role = disnake.Option(name="role", description="新的身分組名稱", type=OptionType.role)):

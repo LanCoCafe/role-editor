@@ -1,3 +1,4 @@
+import json
 import disnake
 from disnake.ext import commands
 import os
@@ -8,6 +9,12 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 
 @bot.event
 async def on_ready():
+    try:
+        with open("auto_roles.json", "r") as file:
+            _ = json.load(file)
+    except FileNotFoundError:
+        with open("auto_roles.json", "w") as file:
+            json.dump({}, file, indent=4)
     print(f'{bot.user} has connected to Discord!')
 
 @bot.event
