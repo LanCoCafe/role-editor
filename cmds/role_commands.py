@@ -1,5 +1,6 @@
 import json
 import disnake
+from disnake import Embed
 from disnake.ext import commands
 from disnake import OptionType
 from disnake.ext.commands import has_permissions
@@ -41,6 +42,7 @@ async def on_member_join(self, member):
 
 @role.sub_command(name="give_everyone", description="給予所有成員指定的身分組")
 async def role_give_everyone(inter, role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")):
+    await inter.response.defer()
     members_to_update = inter.guild.members
     await _give_roles_to_members(inter, members_to_update, role)
 
@@ -86,16 +88,30 @@ async def role_delete(inter, role: disnake.Role = disnake.Option(name="role", de
     await inter.response.send_message(f"已刪除身分組：{role.name}！")
 
 async def _give_roles_to_members(inter, members, role):
-    for member in members:
+    total_members = len(members)
+    errors = []
+
+    embed = Embed(title="身分組更新", description=f"開始更新成員身分組... (0/{total_members})", color=0x91fcff)
+    progress_message = await inter.followup.send(embed=embed)
+
+    for index, member in enumerate(members):
         try:
             await member.add_roles(role)
         except disnake.Forbidden:
-            await inter.response.send_message(f"沒有權限為 {member.display_name} 增加身分組!")
-            return
+            errors.append(f"沒有權限為 {member.display_name} 增加身分組!")
         except Exception as e:
-            await inter.response.send_message(f"為 {member.display_name} 增加身分組時出錯: {e}")
-            return
-    await inter.response.send_message(f"已給予所選成員身分組：{role.name}！")
+            errors.append(f"為 {member.display_name} 增加身分組時出錯: {e}")
+
+        if index % 10 == 0:
+            embed.description = f"更新進度: 已處理 {index}/{total_members} 成員"
+            await progress_message.edit(embed=embed)
+
+    embed.description = f"所有成員的更新已完成，已給予所選成員身分組：{role}！"
+    if errors:
+        embed.add_field(name="錯誤", value="\n".join(errors), inline=False)
+    await progress_message.edit(embed=embed)
+
+
 
 @role.error
 async def role_error(ctx, error):
