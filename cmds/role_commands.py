@@ -3,6 +3,7 @@ import disnake
 from disnake import Embed
 from disnake.ext import commands
 from disnake import OptionType
+from disnake import ButtonStyle, ActionRow, Button
 from disnake.ext.commands import has_permissions
 
 
@@ -10,6 +11,54 @@ from disnake.ext.commands import has_permissions
 @has_permissions(administrator=True)
 async def role(inter):
     pass
+
+class RoleButtons(commands.Cog):
+
+    def __init__(self, bot):
+        self.bot = bot
+        self.role_message_id = None
+
+@commands.slash_command(name="button", description="創建帶有按鈕的身分組訊息")
+async def role_button(self, inter):
+        # 提示用戶輸入嵌入的標題
+        title = await self.ask_for_input(inter, "請輸入嵌入的標題")
+        
+        # 提示用戶輸入嵌入的描述
+        description = await self.ask_for_input(inter, "請輸入嵌入的描述")
+        
+        # 提示用戶輸入按鈕的標籤
+        button_label = await self.ask_for_input(inter, "請輸入按鈕的標籤")
+
+        # 提示用戶輸入將要授予的身分組名稱
+        role_name = await self.ask_for_input(inter, "請輸入要授予的身分組名稱")
+
+        # 尋找或創建身分組
+        role = disnake.utils.get(inter.guild.roles, name=role_name)
+        if not role:
+            role = await inter.guild.create_role(name=role_name)
+
+        # 創建嵌入和按鈕
+        embed = disnake.Embed(title=title, description=description, color=0x00ff00)
+        button = Button(style=ButtonStyle.green, label=button_label, custom_id=f"give_role_{role.id}")
+        action_row = ActionRow().add_item(button)
+
+        # 發送嵌入和按鈕
+        message = await inter.response.send_message(embed=embed, components=[action_row], ephemeral=False)
+        self.role_message_id = message.id
+
+async def ask_for_input(self, inter, prompt):
+    await inter.response.send_message(prompt, ephemeral=True)
+    message = await self.bot.wait_for('message_create', check=lambda m: m.author == inter.user and m.channel == inter.channel)
+    return message.content
+
+@commands.Cog.listener()
+async def on_button_click(self, inter):
+    if self.role_message_id == inter.message.id:
+        role_id = int(inter.custom_id.split('_')[2])
+        role = disnake.utils.get(inter.guild.roles, id=role_id)
+        if role:
+            await inter.user.add_roles(role)
+            await inter.response.send_message(f"你已獲得 '{role.name}' 身分組！", ephemeral=True)
 
 @role.sub_command(name="auto", description="設定新成員自動獲得的身分組")
 async def role_auto(inter, role: disnake.Role = disnake.Option(name="role", description="新的身分組名稱", type=OptionType.role)):
