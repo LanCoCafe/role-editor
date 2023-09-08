@@ -40,6 +40,34 @@ async def on_member_join(self, member):
         if role:
             await member.add_roles(role)
 
+@role.sub_command(name="nuke", description="移除所有成員的指定身分組")
+async def role_nuke(inter, role: disnake.Role = disnake.Option(name="role", description="要移除的身分組名稱", type=OptionType.role)):
+    await inter.response.defer()
+    members_to_update = [m for m in inter.guild.members if role in m.roles]
+    total_members = len(members_to_update)
+    errors = []
+
+    embed = Embed(title="清除身分組", description=f"開始更新成員身分組... (0/{total_members})", color=0x91fcff)
+    progress_message = await inter.followup.send(embed=embed)
+
+    for index, member in enumerate(members_to_update):
+        try:
+            await member.remove_roles(role)
+        except disnake.Forbidden:
+            errors.append(f"沒有權限為 {member.display_name} 移除身分組!")
+        except Exception as e:
+            errors.append(f"為 {member.display_name} 移除身分組時出錯: {e}")
+
+        if index % 10 == 0:
+            embed.description = f"更新進度: 已處理 {index}/{total_members} 成員"
+            await progress_message.edit(embed=embed)
+
+    embed.description = f"所有成員的更新已完成，已從所選成員移除身分組：{role}！"
+    if errors:
+        embed.add_field(name="錯誤", value="\n".join(errors), inline=False)
+    await progress_message.edit(embed=embed)
+
+
 @role.sub_command(name="give_everyone", description="給予所有成員指定的身分組")
 async def role_give_everyone(inter, role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")):
     await inter.response.defer()
@@ -102,7 +130,7 @@ async def _give_roles_to_members(inter, members, role):
         except Exception as e:
             errors.append(f"為 {member.display_name} 增加身分組時出錯: {e}")
 
-        if index % 10 == 0:
+        if index % 1 == 0:
             embed.description = f"更新進度: 已處理 {index}/{total_members} 成員"
             await progress_message.edit(embed=embed)
 
