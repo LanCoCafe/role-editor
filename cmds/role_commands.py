@@ -4,6 +4,7 @@ from disnake import Embed
 from disnake.ext import commands
 from disnake import OptionType
 from disnake import ButtonStyle, ActionRow, Button
+from disnake import TextInputStyle
 from disnake.ext.commands import has_permissions
 
 
@@ -13,19 +14,19 @@ async def role(inter):
     pass
 
 @role.sub_command(description="創建一個自定義身分組按鈕")
-async def create_role_button(inter, title: str, description: str, role: disnake.Role):
+async def create_role_button(inter, title: str, description: str,  role: disnake.Role = disnake.Option(name="role", description="要給予的身分組名稱")):
     class RoleButton(disnake.ui.Button):
-        def __init__(self, role_name):
-            super().__init__(style=disnake.ButtonStyle.primary, label=f"點擊以獲得 {role_name} 身分組")
-            self.role_name = role_name
+        def __init__(self, role_id):
+            super().__init__(style=disnake.ButtonStyle.primary, label=f"點擊以獲得身分組")
+            self.role_id = role_id
 
         async def callback(self, inter: disnake.Interaction):
-            role = disnake.utils.get(inter.guild.roles, name=self.role_name)
+            role = disnake.utils.get(inter.guild.roles, id=self.role_id)
             if role:
                 await inter.user.add_roles(role)
-                await inter.response.send_message(f"你已獲得 '{self.role_name}' 身分組!")
+                await inter.response.send_message(f"你已獲得 '{role.name}' 身分組!")
             else:
-                await inter.response.send_message(f"找不到名為 '{self.role_name}' 的身分組")
+                await inter.response.send_message(f"找不到為 '{self.role_id}' 的身分組")
 
     role_button = RoleButton(role)
     
@@ -35,6 +36,7 @@ async def create_role_button(inter, title: str, description: str, role: disnake.
     view.add_item(role_button)
     
     await inter.response.send_message(embed=embed, view=view)
+
 
 
 @role.sub_command(name="auto", description="設定新成員自動獲得的身分組")
@@ -165,8 +167,6 @@ async def _give_roles_to_members(inter, members, role):
         embed.add_field(name="錯誤", value="\n".join(errors), inline=False)
     await progress_message.edit(embed=embed)
 
-
-
 @role.error
 async def role_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -174,3 +174,4 @@ async def role_error(ctx, error):
 
 def setup(bot):
     bot.add_slash_command(role)
+    
